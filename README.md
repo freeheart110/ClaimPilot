@@ -13,10 +13,10 @@
 - **Lombok**
 - **JUnit & Mockito** (for testing)
 - **GitHub Actions** (CI/CD)
-- **AWS EC2 / Lambda** (deployment target)
-- **Docker** (optional)
+- **AWS EC2 / Lambda**
+- **Docker**
 - **Agile/Scrum** methodology
-- **RESTful APIs** with Swagger (coming soon)
+- **RESTful APIs** with Swagger
 
 ---
 
