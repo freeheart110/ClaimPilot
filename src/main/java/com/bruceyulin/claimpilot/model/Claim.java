@@ -66,7 +66,7 @@ public class Claim {
     @Column(name = "final_settlement_amount", precision = 10, scale = 2)
     private BigDecimal finalSettlementAmount;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "policy_holder_id", nullable = false)
     private PolicyHolder policyHolder;
 }

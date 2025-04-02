@@ -1,15 +1,18 @@
 package com.bruceyulin.claimpilot.controller;
 
+import com.bruceyulin.claimpilot.dto.ClaimDTO;
+import com.bruceyulin.claimpilot.mapper.ClaimMapper;
 import com.bruceyulin.claimpilot.model.Claim;
 import com.bruceyulin.claimpilot.service.ClaimService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/claims")
+@CrossOrigin(origins = "*") // allow requests from frontend dev server
 public class ClaimController {
 
     private final ClaimService claimService;
@@ -19,49 +22,35 @@ public class ClaimController {
     }
 
     @GetMapping
-    public List<Claim> getAllClaims() {
-        return claimService.getAllClaims();
+    public List<ClaimDTO> getAllClaims() {
+        List<Claim> claims = claimService.getAllClaims();
+        return claims.stream()
+                .map(ClaimMapper::toDTO)
+                .collect(Collectors.toList());
     }
 
-    @GetMapping("/policyholder/{id}")
-    public List<Claim> getClaimsByPolicyHolder(@PathVariable Long id) {
-        return claimService.getClaimsByPolicyHolderId(id);
-    }
-
-    @GetMapping("/status/{status}")
-    public List<Claim> getClaimsByStatus(@PathVariable String status) {
-        return claimService.getClaimsByStatus(status);
-    }
-
-    @GetMapping("/type/{claimType}")
-    public List<Claim> getClaimsByType(@PathVariable String claimType) {
-        return claimService.getClaimsByClaimType(claimType);
-    }
-
-    @GetMapping("/date")
-    public List<Claim> getClaimsByDateRange(
-            @RequestParam String start,
-            @RequestParam String end) {
-        return claimService.getClaimsByDateRange(LocalDate.parse(start), LocalDate.parse(end));
-    }
-
-    @GetMapping("/filter")
-    public List<Claim> getClaimsByPolicyHolderAndStatus(
-            @RequestParam Long policyHolderId,
-            @RequestParam String status) {
-        return claimService.getClaimsByPolicyHolderIdAndStatus(policyHolderId, status);
-    }
-
-    @PostMapping
-    public Claim createClaim(@RequestBody Claim claim) {
-        return claimService.createClaim(claim);
+    //
+    @GetMapping("/status")
+    public ResponseEntity<String> getClaimStatusByFlexibleQuery(
+            @RequestParam(required = false) String claimNumber,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String firstName,
+            @RequestParam(required = false) String lastName) {
+        try {
+            String status = claimService.getClaimStatusFlexible(claimNumber, email, firstName, lastName);
+            return ResponseEntity.ok(status);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Claim> getClaimById(@PathVariable Long id) {
+    public ResponseEntity<ClaimDTO> getClaimById(@PathVariable Long id) {
         Claim claim = claimService.getClaimById(id);
         if (claim != null) {
-            return ResponseEntity.ok(claim);
+            return ResponseEntity.ok(ClaimMapper.toDTO(claim));
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -71,5 +60,18 @@ public class ClaimController {
     public ResponseEntity<Void> deleteClaim(@PathVariable Long id) {
         claimService.deleteClaim(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/submit")
+    public ResponseEntity<ClaimDTO> submitClaim(@RequestBody ClaimDTO claimDTO) {
+        Claim claim = claimService.submitClaim(claimDTO); // your service returns a Claim
+        ClaimDTO responseDTO = ClaimMapper.toDTO(claim); // map entity → DTO
+        return ResponseEntity.ok(responseDTO);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ClaimDTO> updateClaim(@PathVariable Long id, @RequestBody ClaimDTO updatedClaimDto) {
+        Claim updatedClaim = claimService.updateClaim(id, updatedClaimDto);
+        return ResponseEntity.ok(ClaimMapper.toDTO(updatedClaim));
     }
 }
