@@ -30,20 +30,31 @@ public class PolicyHolderService {
         repository.deleteById(id);
     }
 
-    public PolicyHolder findOrCreate(String firstName, String lastName, String email, String phone) {
-        Optional<PolicyHolder> existing = repository.findByEmail(email);
+    public PolicyHolder findOrCreate(String firstName, String lastName, String email, String phone,
+            String address, String city, String province, String postalCode, String driverLicenseNumber,
+            String vehicleVIN) {
+
+        Optional<PolicyHolder> existing = repository.findByFirstNameAndLastNameAndEmailAndPhone(
+                firstName, lastName, email, phone);
+
         if (existing.isPresent()) {
             return existing.get();
         }
-        PolicyHolder newHolder = new PolicyHolder();
-        newHolder.setFirstName(firstName);
-        newHolder.setLastName(lastName);
-        newHolder.setEmail(email);
-        newHolder.setPhone(phone);
+
+        PolicyHolder newHolder = PolicyHolder.builder()
+                .firstName(firstName)
+                .lastName(lastName)
+                .email(email)
+                .phone(phone)
+                .address(address)
+                .city(city)
+                .province(province)
+                .postalCode(postalCode)
+                .driverLicenseNumber(driverLicenseNumber)
+                .vehicleVIN(vehicleVIN)
+                .build();
+
         return repository.save(newHolder);
     }
 
-    public Optional<PolicyHolder> findByEmail(String email) {
-        return repository.findByEmail(email);
-    }
 }

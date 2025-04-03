@@ -7,5 +7,10 @@ import java.util.Optional;
 
 @Repository
 public interface PolicyHolderRepository extends JpaRepository<PolicyHolder, Long> {
-    Optional<PolicyHolder> findByEmail(String email);
+
+    Optional<PolicyHolder> findByFirstNameAndLastNameAndEmailAndPhone(
+            String firstName,
+            String lastName,
+            String email,
+            String phone);
 }

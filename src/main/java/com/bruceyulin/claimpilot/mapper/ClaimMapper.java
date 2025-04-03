@@ -26,7 +26,11 @@ public class ClaimMapper {
             return null;
 
         return ClaimDTO.builder()
+                .id(claim.getId())
+                .claimNumber(claim.getClaimNumber())
                 .claimType(claim.getClaimType())
+                .status(claim.getStatus())
+                .claimDate(claim.getClaimDate())
                 .dateOfAccident(claim.getDateOfAccident())
                 .accidentDescription(claim.getAccidentDescription())
                 .policeReportNumber(claim.getPoliceReportNumber())

@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.UUID;
 import java.util.Optional;
 
 @Service
@@ -51,7 +50,13 @@ public class ClaimService {
                 phDto.getFirstName(),
                 phDto.getLastName(),
                 phDto.getEmail(),
-                phDto.getPhone());
+                phDto.getPhone(),
+                phDto.getAddress(),
+                phDto.getCity(),
+                phDto.getProvince(),
+                phDto.getPostalCode(),
+                phDto.getDriverLicenseNumber(),
+                phDto.getVehicleVIN());
 
         // Convert ClaimDTO to Claim entity using mapper
         Claim claim = ClaimMapper.toEntity(claimDTO);
@@ -111,7 +116,7 @@ public class ClaimService {
         Claim claim = claimRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Claim not found"));
 
-        // Only update the fields relevant for backoffice
+        // Update claim fields (conditionally)
         if (updatedClaimDto.getStatus() != null) {
             claim.setStatus(updatedClaimDto.getStatus());
         }
@@ -120,6 +125,50 @@ public class ClaimService {
         }
         if (updatedClaimDto.getFinalSettlementAmount() != null) {
             claim.setFinalSettlementAmount(updatedClaimDto.getFinalSettlementAmount());
+        }
+        if (updatedClaimDto.getDateOfAccident() != null) {
+            claim.setDateOfAccident(updatedClaimDto.getDateOfAccident());
+        }
+        if (updatedClaimDto.getAccidentDescription() != null) {
+            claim.setAccidentDescription(updatedClaimDto.getAccidentDescription());
+        }
+        if (updatedClaimDto.getPoliceReportNumber() != null) {
+            claim.setPoliceReportNumber(updatedClaimDto.getPoliceReportNumber());
+        }
+        if (updatedClaimDto.getLocationOfAccident() != null) {
+            claim.setLocationOfAccident(updatedClaimDto.getLocationOfAccident());
+        }
+        if (updatedClaimDto.getDamageDescription() != null) {
+            claim.setDamageDescription(updatedClaimDto.getDamageDescription());
+        }
+
+        // Update policyholder (if included in the DTO)
+        if (updatedClaimDto.getPolicyHolder() != null) {
+            PolicyHolder policyHolder = claim.getPolicyHolder();
+            PolicyHolderDTO ph = updatedClaimDto.getPolicyHolder();
+
+            if (ph.getFirstName() != null)
+                policyHolder.setFirstName(ph.getFirstName());
+            if (ph.getLastName() != null)
+                policyHolder.setLastName(ph.getLastName());
+            if (ph.getEmail() != null)
+                policyHolder.setEmail(ph.getEmail());
+            if (ph.getPhone() != null)
+                policyHolder.setPhone(ph.getPhone());
+            if (ph.getAddress() != null)
+                policyHolder.setAddress(ph.getAddress());
+            if (ph.getCity() != null)
+                policyHolder.setCity(ph.getCity());
+            if (ph.getProvince() != null)
+                policyHolder.setProvince(ph.getProvince());
+            if (ph.getPostalCode() != null)
+                policyHolder.setPostalCode(ph.getPostalCode());
+            if (ph.getDriverLicenseNumber() != null)
+                policyHolder.setDriverLicenseNumber(ph.getDriverLicenseNumber());
+            if (ph.getVehicleVIN() != null)
+                policyHolder.setVehicleVIN(ph.getVehicleVIN());
+
+            claim.setPolicyHolder(policyHolder); // optional if you want to ensure linkage
         }
 
         return claimRepository.save(claim);
