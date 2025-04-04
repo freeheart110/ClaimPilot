@@ -31,10 +31,6 @@
 
 ### Database Setup
 
-Start PostgreSQL and run:
-
-```sql
-CREATE DATABASE claimpilot;
-CREATE USER yu WITH PASSWORD 'your-password';
-GRANT ALL PRIVILEGES ON DATABASE claimpilot TO yu;
-```
+EC2_PUBLIC_IP: 35.93.224.186
+endpoint test curl:
+curl http://35.93.224.186:8080/api/claims
