@@ -34,3 +34,9 @@
 EC2_PUBLIC_IP: 35.93.224.186
 endpoint test curl:
 curl http://35.93.224.186:8080/api/claims
+
+packaging without testing:
+./mvnw clean package -DskipTests
+
+upload to EC2 instance:
+scp -i ~/.ssh/ec2-key-claimpilot.pem target/claimpilot-0.0.1-SNAPSHOT.jar ec2-user@35.93.224.186:~/
