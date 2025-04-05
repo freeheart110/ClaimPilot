@@ -8,7 +8,6 @@ import com.bruceyulin.claimpilot.dto.ClaimDTO;
 import com.bruceyulin.claimpilot.dto.PolicyHolderDTO;
 import com.bruceyulin.claimpilot.mapper.ClaimMapper;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -20,9 +19,11 @@ import java.util.Optional;
 public class ClaimService {
 
     private final ClaimRepository claimRepository;
+    private final PolicyHolderService policyHolderService;
 
-    public ClaimService(ClaimRepository claimRepository) {
+    public ClaimService(ClaimRepository claimRepository, PolicyHolderService policyHolderService) {
         this.claimRepository = claimRepository;
+        this.policyHolderService = policyHolderService;
     }
 
     public List<Claim> getAllClaims() {
@@ -36,11 +37,6 @@ public class ClaimService {
     public void deleteClaim(Long id) {
         claimRepository.deleteById(id);
     }
-
-    @Autowired
-    private ClaimRepository repository;
-    @Autowired
-    private PolicyHolderService policyHolderService;
 
     public Claim submitClaim(ClaimDTO claimDTO) {
         // Find or create the policyholder
@@ -62,7 +58,7 @@ public class ClaimService {
         Claim claim = ClaimMapper.toEntity(claimDTO);
         claim.setClaimNumber(generateClaimNumber());
         claim.setClaimType(claimDTO.getClaimType());
-        claim.setStatus(ClaimStatus.SUBMITTED); // ✅ FIX: use enum
+        claim.setStatus(ClaimStatus.SUBMITTED);
         claim.setClaimDate(LocalDate.now());
         claim.setDateOfAccident(claimDTO.getDateOfAccident());
         claim.setAccidentDescription(claimDTO.getAccidentDescription());
@@ -73,7 +69,7 @@ public class ClaimService {
         claim.setFinalSettlementAmount(claimDTO.getFinalSettlementAmount());
         claim.setPolicyHolder(policyHolder);
 
-        return repository.save(claim);
+        return claimRepository.save(claim);
     }
 
     public String getClaimStatusFlexible(String claimNumber, String email, String firstName, String lastName) {

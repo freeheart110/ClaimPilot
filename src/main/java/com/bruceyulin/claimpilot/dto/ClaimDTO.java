@@ -26,4 +26,5 @@ public class ClaimDTO {
     private BigDecimal finalSettlementAmount;
 
     private PolicyHolderDTO policyHolder;
+    private UserDTO assignedAdjuster;
 }

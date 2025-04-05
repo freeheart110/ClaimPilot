@@ -40,3 +40,15 @@ packaging without testing:
 
 upload to EC2 instance:
 scp -i ~/.ssh/ec2-key-claimpilot.pem target/claimpilot-0.0.1-SNAPSHOT.jar ec2-user@35.93.224.186:~/
+
+SSH into EC2 instance:
+ssh -i ~/.ssh/ec2-key-claimpilot.pem ec2-user@35.93.224.186
+
+Run the Spring Boot JAR in ec2 console:
+java -jar claimpilot-0.0.1-SNAPSHOT.jar
+
+Connect to RDS database from EC2:
+
+psql -h database-claimpilot.c524qeq804s9.us-west-2.rds.amazonaws.com \
+ -U claimpilotDB \
+ -d postgres

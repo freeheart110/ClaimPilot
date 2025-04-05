@@ -18,6 +18,7 @@ public class ClaimMapper {
                 .estimatedRepairCost(dto.getEstimatedRepairCost())
                 .finalSettlementAmount(dto.getFinalSettlementAmount())
                 .policyHolder(PolicyHolderMapper.toEntity(dto.getPolicyHolder()))
+                .assignedAdjuster(UserMapper.toEntity(dto.getAssignedAdjuster()))
                 .build();
     }
 
@@ -39,6 +40,7 @@ public class ClaimMapper {
                 .estimatedRepairCost(claim.getEstimatedRepairCost())
                 .finalSettlementAmount(claim.getFinalSettlementAmount())
                 .policyHolder(PolicyHolderMapper.toDTO(claim.getPolicyHolder()))
+                .assignedAdjuster(UserMapper.toDTO(claim.getAssignedAdjuster()))
                 .build();
     }
 }

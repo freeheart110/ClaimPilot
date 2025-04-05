@@ -69,4 +69,8 @@ public class Claim {
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "policy_holder_id", nullable = false)
     private PolicyHolder policyHolder;
+
+    @ManyToOne
+    @JoinColumn(name = "adjuster_id")
+    private User assignedAdjuster;
 }
