@@ -2,6 +2,8 @@ package com.bruceyulin.claimpilot.config;
 
 import com.bruceyulin.claimpilot.model.User;
 import com.bruceyulin.claimpilot.repository.UserRepository;
+
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,9 +15,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-
+import static org.springframework.security.config.Customizer.withDefaults;
 import java.util.List;
 
 @Configuration
@@ -31,16 +35,19 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/admin/**").hasRole("ADMIN")
             .requestMatchers("/adjuster/**").hasRole("ADJUSTER")
+            .requestMatchers("/api/claims/status").permitAll() // allow policyholder to check claim status
             .anyRequest().authenticated())
+        .exceptionHandling(exception -> exception
+            .authenticationEntryPoint(unauthorizedHandler()) // ✅ no HTML redirect
+        )
         .formLogin(form -> form
-            .loginPage("/login") // custom login page
-            .defaultSuccessUrl("/dashboard", true) // where to go after successful login
+            .successHandler(successHandler()) // ✅ frontend controls routing
             .permitAll())
         .logout(logout -> logout
             .logoutSuccessUrl("/login?logout") // where to go after logout
             .permitAll())
+        .cors(withDefaults())
         .csrf(csrf -> csrf.disable()); // Disable CSRF for now (optional; adjust for production)
-
     return http.build();
   }
 
@@ -66,5 +73,19 @@ public class SecurityConfig {
   @Bean
   public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
     return config.getAuthenticationManager();
+  }
+
+  @Bean
+  public AuthenticationSuccessHandler successHandler() {
+    return (request, response, authentication) -> {
+      response.setStatus(HttpServletResponse.SC_OK);
+    };
+  }
+
+  @Bean
+  public AuthenticationEntryPoint unauthorizedHandler() {
+    return (request, response, authException) -> {
+      response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+    };
   }
 }
