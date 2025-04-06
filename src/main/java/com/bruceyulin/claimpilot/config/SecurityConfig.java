@@ -21,6 +21,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import static org.springframework.security.config.Customizer.withDefaults;
 import java.util.List;
+import org.springframework.http.HttpMethod;
 
 @Configuration
 @EnableMethodSecurity // Enables @PreAuthorize, @Secured, etc.
@@ -35,6 +36,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/admin/**").hasRole("ADMIN")
             .requestMatchers("/adjuster/**").hasRole("ADJUSTER")
+            .requestMatchers(HttpMethod.POST, "/api/claims").permitAll()
             .requestMatchers("/api/claims/status").permitAll() // allow policyholder to check claim status
             .anyRequest().authenticated())
         .exceptionHandling(exception -> exception

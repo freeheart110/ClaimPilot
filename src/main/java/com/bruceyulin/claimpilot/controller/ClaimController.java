@@ -64,7 +64,7 @@ public class ClaimController {
 
     @PostMapping
     public ResponseEntity<ClaimDTO> submitClaim(@RequestBody ClaimDTO claimDTO) {
-        Claim claim = claimService.submitClaim(claimDTO); // your service returns a Claim
+        Claim claim = claimService.submitClaim(claimDTO); // service returns a Claim
         ClaimDTO responseDTO = ClaimMapper.toDTO(claim); // map entity → DTO
         return ResponseEntity.ok(responseDTO);
     }

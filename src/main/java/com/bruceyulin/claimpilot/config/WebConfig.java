@@ -17,7 +17,8 @@ public class WebConfig {
 
         config.setAllowedOrigins(List.of(
                 "http://localhost:3000",
-                "https://claim-pilot-frontend.vercel.app"));
+                "https://claim-pilot-frontend.vercel.app",
+                "https://claimpilot.vercel.app"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true); // ✅ required for cookie/session login
