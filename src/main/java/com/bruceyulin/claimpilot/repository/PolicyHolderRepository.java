@@ -13,4 +13,6 @@ public interface PolicyHolderRepository extends JpaRepository<PolicyHolder, Long
             String lastName,
             String email,
             String phone);
+
+    Optional<PolicyHolder> findByDriverLicenseNumber(String driverLicenseNumber);
 }

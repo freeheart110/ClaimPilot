@@ -2,6 +2,7 @@ package com.bruceyulin.claimpilot.controller;
 
 import com.bruceyulin.claimpilot.dto.UserDTO;
 import com.bruceyulin.claimpilot.mapper.UserMapper;
+import com.bruceyulin.claimpilot.model.Role; // Import the Role enum
 import com.bruceyulin.claimpilot.model.User;
 import com.bruceyulin.claimpilot.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -19,19 +20,12 @@ public class UserController {
 
   private final UserService userService;
 
-  @GetMapping
-  public List<UserDTO> getAllUsers() {
-    return userService.getAllUsers()
-        .stream()
-        .map(UserMapper::toDTO)
-        .collect(Collectors.toList());
-  }
-
   @GetMapping("/{id}")
   public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
     Optional<User> user = userService.getUserById(id);
-    return user.map(value -> ResponseEntity.ok(UserMapper.toDTO(value)))
-        .orElseGet(() -> ResponseEntity.notFound().build());
+    return user.map(UserMapper::toDTO)
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build());
   }
 
   @PostMapping
@@ -44,5 +38,13 @@ public class UserController {
   public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
     userService.deleteUser(id);
     return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/adjusters")
+  public List<UserDTO> getAllAdjusters() {
+    return userService.getUsersByRole(Role.ADJUSTER)
+        .stream()
+        .map(UserMapper::toDTO)
+        .collect(Collectors.toList());
   }
 }

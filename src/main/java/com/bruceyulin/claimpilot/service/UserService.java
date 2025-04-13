@@ -4,7 +4,7 @@ import com.bruceyulin.claimpilot.model.User;
 import com.bruceyulin.claimpilot.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
+import com.bruceyulin.claimpilot.model.Role;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,8 +13,8 @@ import java.util.Optional;
 public class UserService {
   private final UserRepository userRepository;
 
-  public List<User> getAllUsers() {
-    return userRepository.findAll();
+  public List<User> getUsersByRole(Role role) {
+    return userRepository.findByRole(role);
   }
 
   public Optional<User> getUserById(Long id) {
