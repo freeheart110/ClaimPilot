@@ -21,7 +21,7 @@ public class WebConfig {
                 "https://claimpilot.vercel.app"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true); // ✅ required for cookie/session login
+        config.setAllowCredentials(true); // required for cookie/session login
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

@@ -38,6 +38,7 @@ public class SecurityConfig {
             .requestMatchers("/adjuster/**").hasRole("ADJUSTER")
             .requestMatchers(HttpMethod.POST, "/api/claims").permitAll()
             .requestMatchers("/api/claims/status").permitAll() // allow policyholder to check claim status
+            .requestMatchers(HttpMethod.PUT, "/api/claims/**").hasAnyRole("ADMIN", "ADJUSTER")
             .anyRequest().authenticated())
         .exceptionHandling(exception -> exception
             .authenticationEntryPoint(unauthorizedHandler()) // ✅ no HTML redirect

@@ -4,6 +4,12 @@ import com.bruceyulin.claimpilot.model.Claim;
 import com.bruceyulin.claimpilot.model.ClaimStatus;
 import com.bruceyulin.claimpilot.model.PolicyHolder;
 import com.bruceyulin.claimpilot.repository.ClaimRepository;
+import com.bruceyulin.claimpilot.repository.UserRepository;
+import com.bruceyulin.claimpilot.model.User;
+import com.bruceyulin.claimpilot.model.Role;
+
+import jakarta.persistence.EntityNotFoundException;
+
 import com.bruceyulin.claimpilot.dto.ClaimDTO;
 import com.bruceyulin.claimpilot.dto.PolicyHolderDTO;
 import com.bruceyulin.claimpilot.mapper.ClaimMapper;
@@ -14,16 +20,20 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 public class ClaimService {
 
     private final ClaimRepository claimRepository;
     private final PolicyHolderService policyHolderService;
+    private final UserRepository userRepository;
 
-    public ClaimService(ClaimRepository claimRepository, PolicyHolderService policyHolderService) {
+    public ClaimService(ClaimRepository claimRepository, PolicyHolderService policyHolderService,
+            UserRepository userRepository) {
         this.claimRepository = claimRepository;
         this.policyHolderService = policyHolderService;
+        this.userRepository = userRepository;
     }
 
     public List<Claim> getAllClaims() {
@@ -68,7 +78,15 @@ public class ClaimService {
         claim.setEstimatedRepairCost(claimDTO.getEstimatedRepairCost());
         claim.setFinalSettlementAmount(claimDTO.getFinalSettlementAmount());
         claim.setPolicyHolder(policyHolder);
-
+        // Automatically assign the adjuster with the least workload
+        List<Long> adjusterIds = userRepository.findAdjustersByLeastClaims();
+        if (!adjusterIds.isEmpty()) {
+            Random random = new Random();
+            Long chosenAdjusterId = adjusterIds.get(random.nextInt(adjusterIds.size()));
+            User adjuster = userRepository.findById(chosenAdjusterId)
+                    .orElseThrow(() -> new RuntimeException("Adjuster not found"));
+            claim.setAssignedAdjuster(adjuster);
+        }
         return claimRepository.save(claim);
     }
 
@@ -164,7 +182,7 @@ public class ClaimService {
             if (ph.getVehicleVIN() != null)
                 policyHolder.setVehicleVIN(ph.getVehicleVIN());
 
-            claim.setPolicyHolder(policyHolder); // optional if you want to ensure linkage
+            claim.setPolicyHolder(policyHolder);
         }
 
         return claimRepository.save(claim);
@@ -175,5 +193,27 @@ public class ClaimService {
         int randomPart = (int) (Math.random() * 1000000);
         String formattedRandom = String.format("%06d", randomPart);
         return "CLM-" + datePart + "-" + formattedRandom;
+    }
+
+    public Claim assignAdjuster(Long claimId, Long adjusterId) {
+        Claim claim = claimRepository.findById(claimId)
+                .orElseThrow(() -> new EntityNotFoundException("Claim not found"));
+
+        User adjuster = userRepository.findById(adjusterId)
+                .orElseThrow(() -> new EntityNotFoundException("Adjuster not found"));
+
+        if (adjuster.getRole() != Role.ADJUSTER) {
+            throw new IllegalArgumentException("User is not an adjuster");
+        }
+
+        claim.setAssignedAdjuster(adjuster);
+        return claimRepository.save(claim);
+    }
+
+    public List<ClaimDTO> getClaimsForAdjuster(Long adjusterId) {
+        List<Claim> claims = claimRepository.findClaimsByAssignedAdjusterId(adjusterId);
+        return claims.stream()
+                .map(ClaimMapper::toDTO)
+                .toList();
     }
 }

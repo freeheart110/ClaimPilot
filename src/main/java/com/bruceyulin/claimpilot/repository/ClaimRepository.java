@@ -20,9 +20,12 @@ public interface ClaimRepository extends JpaRepository<Claim, Long> {
 
     List<Claim> findByClaimDateBetween(LocalDate startDate, LocalDate endDate);
 
+    Optional<Claim> findByClaimNumberAndPolicyHolder(String claimNumber, PolicyHolder policyHolder);
+
     @Query("SELECT c FROM Claim c WHERE c.policyHolder.id = :policyHolderId AND c.status = :status")
     List<Claim> findByPolicyHolderIdAndStatus(@Param("policyHolderId") Long policyHolderId,
             @Param("status") String status);
 
-    Optional<Claim> findByClaimNumberAndPolicyHolder(String claimNumber, PolicyHolder policyHolder);
+    @Query("SELECT c FROM Claim c WHERE c.assignedAdjuster.id = :adjusterId")
+    List<Claim> findClaimsByAssignedAdjusterId(@Param("adjusterId") Long adjusterId);
 }
