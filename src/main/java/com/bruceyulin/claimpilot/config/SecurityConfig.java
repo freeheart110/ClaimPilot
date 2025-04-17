@@ -41,13 +41,15 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.PUT, "/api/claims/**").hasAnyRole("ADMIN", "ADJUSTER")
             .anyRequest().authenticated())
         .exceptionHandling(exception -> exception
-            .authenticationEntryPoint(unauthorizedHandler()) // ✅ no HTML redirect
+            .authenticationEntryPoint(unauthorizedHandler()) // no HTML redirect
         )
         .formLogin(form -> form
-            .successHandler(successHandler()) // ✅ frontend controls routing
+            .successHandler(successHandler()) // frontend controls routing
             .permitAll())
         .logout(logout -> logout
-            .logoutSuccessUrl("/login?logout") // where to go after logout
+            .logoutSuccessHandler((request, response, authentication) -> {
+              response.setStatus(HttpServletResponse.SC_OK); // No redirect
+            })
             .permitAll())
         .cors(withDefaults())
         .csrf(csrf -> csrf.disable()); // Disable CSRF for now (optional; adjust for production)

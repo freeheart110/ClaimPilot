@@ -14,6 +14,7 @@ import com.bruceyulin.claimpilot.dto.ClaimDTO;
 import com.bruceyulin.claimpilot.dto.PolicyHolderDTO;
 import com.bruceyulin.claimpilot.mapper.ClaimMapper;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -28,12 +29,14 @@ public class ClaimService {
     private final ClaimRepository claimRepository;
     private final PolicyHolderService policyHolderService;
     private final UserRepository userRepository;
+    private final AuditTrailService auditTrailService;
 
     public ClaimService(ClaimRepository claimRepository, PolicyHolderService policyHolderService,
-            UserRepository userRepository) {
+            UserRepository userRepository, AuditTrailService auditTrailService) {
         this.claimRepository = claimRepository;
         this.policyHolderService = policyHolderService;
         this.userRepository = userRepository;
+        this.auditTrailService = auditTrailService;
     }
 
     public List<Claim> getAllClaims() {
@@ -86,6 +89,10 @@ public class ClaimService {
             User adjuster = userRepository.findById(chosenAdjusterId)
                     .orElseThrow(() -> new RuntimeException("Adjuster not found"));
             claim.setAssignedAdjuster(adjuster);
+
+            // Log the adjuster assignment
+            auditTrailService.logAction(adjuster, claim, "Assigned",
+                    "Claim auto-assigned to adjuster: " + adjuster.getFirstName() + " " + adjuster.getLastName());
         }
         return claimRepository.save(claim);
     }
@@ -130,62 +137,117 @@ public class ClaimService {
         Claim claim = claimRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Claim not found"));
 
-        // Update claim fields (conditionally)
-        if (updatedClaimDto.getStatus() != null) {
+        StringBuilder details = new StringBuilder("Updated fields:");
+
+        // Update fields and track changes
+        if (updatedClaimDto.getStatus() != null && updatedClaimDto.getStatus() != claim.getStatus()) {
+            details.append(" status from ").append(claim.getStatus())
+                    .append(" to ").append(updatedClaimDto.getStatus()).append(";");
             claim.setStatus(updatedClaimDto.getStatus());
         }
-        if (updatedClaimDto.getEstimatedRepairCost() != null) {
+        if (updatedClaimDto.getEstimatedRepairCost() != null &&
+                !updatedClaimDto.getEstimatedRepairCost().equals(claim.getEstimatedRepairCost())) {
+            details.append(" estimatedRepairCost from ").append(claim.getEstimatedRepairCost())
+                    .append(" to ").append(updatedClaimDto.getEstimatedRepairCost()).append(";");
             claim.setEstimatedRepairCost(updatedClaimDto.getEstimatedRepairCost());
         }
-        if (updatedClaimDto.getFinalSettlementAmount() != null) {
+        if (updatedClaimDto.getFinalSettlementAmount() != null &&
+                !updatedClaimDto.getFinalSettlementAmount().equals(claim.getFinalSettlementAmount())) {
+            details.append(" finalSettlementAmount from ").append(claim.getFinalSettlementAmount())
+                    .append(" to ").append(updatedClaimDto.getFinalSettlementAmount()).append(";");
             claim.setFinalSettlementAmount(updatedClaimDto.getFinalSettlementAmount());
         }
-        if (updatedClaimDto.getDateOfAccident() != null) {
+        if (updatedClaimDto.getDateOfAccident() != null &&
+                !updatedClaimDto.getDateOfAccident().equals(claim.getDateOfAccident())) {
+            details.append(" dateOfAccident from ").append(claim.getDateOfAccident())
+                    .append(" to ").append(updatedClaimDto.getDateOfAccident()).append(";");
             claim.setDateOfAccident(updatedClaimDto.getDateOfAccident());
         }
-        if (updatedClaimDto.getAccidentDescription() != null) {
+        if (updatedClaimDto.getAccidentDescription() != null &&
+                !updatedClaimDto.getAccidentDescription().equals(claim.getAccidentDescription())) {
+            details.append(" accidentDescription changed;");
             claim.setAccidentDescription(updatedClaimDto.getAccidentDescription());
         }
-        if (updatedClaimDto.getPoliceReportNumber() != null) {
+        if (updatedClaimDto.getPoliceReportNumber() != null &&
+                !updatedClaimDto.getPoliceReportNumber().equals(claim.getPoliceReportNumber())) {
+            details.append(" policeReportNumber changed;");
             claim.setPoliceReportNumber(updatedClaimDto.getPoliceReportNumber());
         }
-        if (updatedClaimDto.getLocationOfAccident() != null) {
+        if (updatedClaimDto.getLocationOfAccident() != null &&
+                !updatedClaimDto.getLocationOfAccident().equals(claim.getLocationOfAccident())) {
+            details.append(" locationOfAccident changed;");
             claim.setLocationOfAccident(updatedClaimDto.getLocationOfAccident());
         }
-        if (updatedClaimDto.getDamageDescription() != null) {
+        if (updatedClaimDto.getDamageDescription() != null &&
+                !updatedClaimDto.getDamageDescription().equals(claim.getDamageDescription())) {
+            details.append(" damageDescription changed;");
             claim.setDamageDescription(updatedClaimDto.getDamageDescription());
         }
 
-        // Update policyholder (if included in the DTO)
+        // Update policyholder details if provided
         if (updatedClaimDto.getPolicyHolder() != null) {
             PolicyHolder policyHolder = claim.getPolicyHolder();
             PolicyHolderDTO ph = updatedClaimDto.getPolicyHolder();
 
-            if (ph.getFirstName() != null)
+            if (ph.getFirstName() != null && !ph.getFirstName().equals(policyHolder.getFirstName())) {
+                details.append(" policyHolder.firstName from ").append(policyHolder.getFirstName())
+                        .append(" to ").append(ph.getFirstName()).append(";");
                 policyHolder.setFirstName(ph.getFirstName());
-            if (ph.getLastName() != null)
+            }
+            if (ph.getLastName() != null && !ph.getLastName().equals(policyHolder.getLastName())) {
+                details.append(" policyHolder.lastName from ").append(policyHolder.getLastName())
+                        .append(" to ").append(ph.getLastName()).append(";");
                 policyHolder.setLastName(ph.getLastName());
-            if (ph.getEmail() != null)
+            }
+            if (ph.getEmail() != null && !ph.getEmail().equals(policyHolder.getEmail())) {
+                details.append(" policyHolder.email changed;");
                 policyHolder.setEmail(ph.getEmail());
-            if (ph.getPhone() != null)
+            }
+            if (ph.getPhone() != null && !ph.getPhone().equals(policyHolder.getPhone())) {
+                details.append(" policyHolder.phone changed;");
                 policyHolder.setPhone(ph.getPhone());
-            if (ph.getAddress() != null)
+            }
+            if (ph.getAddress() != null && !ph.getAddress().equals(policyHolder.getAddress())) {
+                details.append(" policyHolder.address changed;");
                 policyHolder.setAddress(ph.getAddress());
-            if (ph.getCity() != null)
+            }
+            if (ph.getCity() != null && !ph.getCity().equals(policyHolder.getCity())) {
+                details.append(" policyHolder.city changed;");
                 policyHolder.setCity(ph.getCity());
-            if (ph.getProvince() != null)
+            }
+            if (ph.getProvince() != null && !ph.getProvince().equals(policyHolder.getProvince())) {
+                details.append(" policyHolder.province changed;");
                 policyHolder.setProvince(ph.getProvince());
-            if (ph.getPostalCode() != null)
+            }
+            if (ph.getPostalCode() != null && !ph.getPostalCode().equals(policyHolder.getPostalCode())) {
+                details.append(" policyHolder.postalCode changed;");
                 policyHolder.setPostalCode(ph.getPostalCode());
-            if (ph.getDriverLicenseNumber() != null)
+            }
+            if (ph.getDriverLicenseNumber() != null
+                    && !ph.getDriverLicenseNumber().equals(policyHolder.getDriverLicenseNumber())) {
+                details.append(" policyHolder.driverLicenseNumber changed;");
                 policyHolder.setDriverLicenseNumber(ph.getDriverLicenseNumber());
-            if (ph.getVehicleVIN() != null)
+            }
+            if (ph.getVehicleVIN() != null && !ph.getVehicleVIN().equals(policyHolder.getVehicleVIN())) {
+                details.append(" policyHolder.vehicleVIN changed;");
                 policyHolder.setVehicleVIN(ph.getVehicleVIN());
+            }
 
             claim.setPolicyHolder(policyHolder);
         }
 
-        return claimRepository.save(claim);
+        Claim saved = claimRepository.save(claim);
+
+        // Log audit entry only if any details were actually modified
+        if (!details.toString().equals("Updated fields:")) {
+            User currentUser = userRepository.findByEmail(
+                    SecurityContextHolder.getContext().getAuthentication().getName())
+                    .orElseThrow(() -> new RuntimeException("Current user not found"));
+
+            auditTrailService.logAction(currentUser, saved, "Updated Claim", details.toString());
+        }
+
+        return saved;
     }
 
     private String generateClaimNumber() {
@@ -199,15 +261,46 @@ public class ClaimService {
         Claim claim = claimRepository.findById(claimId)
                 .orElseThrow(() -> new EntityNotFoundException("Claim not found"));
 
-        User adjuster = userRepository.findById(adjusterId)
+        User newAdjuster = userRepository.findById(adjusterId)
                 .orElseThrow(() -> new EntityNotFoundException("Adjuster not found"));
 
-        if (adjuster.getRole() != Role.ADJUSTER) {
+        if (newAdjuster.getRole() != Role.ADJUSTER) {
             throw new IllegalArgumentException("User is not an adjuster");
         }
 
-        claim.setAssignedAdjuster(adjuster);
-        return claimRepository.save(claim);
+        User previousAdjuster = claim.getAssignedAdjuster();
+
+        // Skip if already assigned to the same adjuster
+        if (previousAdjuster != null && previousAdjuster.getId().equals(adjusterId)) {
+            return claim;
+        }
+
+        claim.setAssignedAdjuster(newAdjuster);
+        Claim saved = claimRepository.save(claim);
+
+        // Get admin (current user) from security context
+        User adminUser = userRepository.findByEmail(
+                SecurityContextHolder.getContext().getAuthentication().getName())
+                .orElseThrow(() -> new RuntimeException("Current user not found"));
+
+        // Build audit message
+        StringBuilder details = new StringBuilder();
+        details.append("Adjuster reassigned by admin ")
+                .append(adminUser.getFirstName());
+
+        if (previousAdjuster != null) {
+            details.append(". From: ").append(previousAdjuster.getFirstName()).append(" ")
+                    .append(previousAdjuster.getLastName());
+        } else {
+            details.append(". Initial assignment.");
+        }
+
+        details.append(" → To: ").append(newAdjuster.getFirstName()).append(" ").append(newAdjuster.getLastName());
+
+        // Log the audit
+        auditTrailService.logAction(adminUser, saved, "Assigned Adjuster", details.toString());
+
+        return saved;
     }
 
     public List<ClaimDTO> getClaimsForAdjuster(Long adjusterId) {

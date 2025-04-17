@@ -4,8 +4,6 @@ import com.bruceyulin.claimpilot.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import com.bruceyulin.claimpilot.model.Claim;
-import com.bruceyulin.claimpilot.model.PolicyHolder;
 import com.bruceyulin.claimpilot.model.Role;
 
 import java.util.Optional;

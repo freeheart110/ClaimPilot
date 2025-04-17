@@ -2,9 +2,10 @@ package com.bruceyulin.claimpilot.controller;
 
 import com.bruceyulin.claimpilot.dto.ClaimDTO;
 import com.bruceyulin.claimpilot.dto.AssignAdjusterRequest;
-
+import com.bruceyulin.claimpilot.dto.AuditTrailDTO;
 import com.bruceyulin.claimpilot.mapper.ClaimMapper;
 import com.bruceyulin.claimpilot.model.Claim;
+import com.bruceyulin.claimpilot.service.AuditTrailService;
 import com.bruceyulin.claimpilot.service.ClaimService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,10 +24,13 @@ public class ClaimController {
 
     private final ClaimService claimService;
     private final UserRepository userRepository;
+    private final AuditTrailService auditTrailService;
 
-    public ClaimController(ClaimService claimService, UserRepository userRepository) {
+    public ClaimController(ClaimService claimService, UserRepository userRepository,
+            AuditTrailService auditTrailService) {
         this.claimService = claimService;
         this.userRepository = userRepository;
+        this.auditTrailService = auditTrailService;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -36,6 +40,13 @@ public class ClaimController {
         return claims.stream()
                 .map(ClaimMapper::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    // Audit trail controller
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{claimId}/audit")
+    public List<AuditTrailDTO> getClaimAuditLogs(@PathVariable Long claimId) {
+        return auditTrailService.getAuditTrailsForClaim(claimId);
     }
 
     @PreAuthorize("hasRole('ADJUSTER')")

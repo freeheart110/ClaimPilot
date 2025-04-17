@@ -44,8 +44,13 @@ scp -i ~/.ssh/ec2-key-claimpilot.pem target/claimpilot-0.0.1-SNAPSHOT.jar ec2-us
 SSH into EC2 instance:
 ssh -i ~/.ssh/ec2-key-claimpilot.pem ec2-user@35.93.224.186
 
+Stop the currently running app:
+pkill -f 'claimpilot'
+
 Run the Spring Boot JAR in ec2 console:
 java -jar claimpilot-0.0.1-SNAPSHOT.jar
+run without shutting down after terminal closes:
+nohup java -jar claimpilot-0.0.1-SNAPSHOT.jar --spring.profiles.active=aws > log.txt 2>&1 &
 
 Connect to RDS database from EC2:
 
