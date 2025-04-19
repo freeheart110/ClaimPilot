@@ -1,6 +1,6 @@
 # ClaimPilot 🛠️
 
-**ClaimPilot** is a microservice-based backend system for managing auto insurance claims, built with Java and Spring Boot. Designed to showcase real-world service-oriented architecture and backend optimization, the project reflects my experience as a tradesman turned developer and my goal to work in the insurance software space.
+**ClaimPilot** is a microservice-based backend system for managing auto insurance claims, built with Java and Spring Boot. Designed to showcase real-world service-oriented architecture and backend optimization.
 
 ---
 
@@ -13,7 +13,7 @@
 - **Lombok**
 - **JUnit & Mockito** (for testing)
 - **GitHub Actions** (CI/CD)
-- **AWS EC2 / Lambda**
+- **AWS EC2**
 - **Docker**
 - **Agile/Scrum** methodology
 - **RESTful APIs** with Swagger
@@ -29,31 +29,54 @@
 - PostgreSQL (v14+)
 - Git
 
-### Database Setup
+## API Documentation
 
-EC2_PUBLIC_IP: 35.93.224.186
-endpoint test curl:
-curl http://35.93.224.186:8080/api/claims
+- Swagger UI:
+  https://claimpilot.duckdns.org/swagger-ui/index.html
 
-packaging without testing:
+## Run the Backend Locally
+
+Prerequisites
+• Java 17+
+• Maven
+• PostgreSQL
+• Git
+
+1. Clone the Repository
+
+git clone https://github.com/freeheart110/ClaimPilot.git
+cd ClaimPilot
+
+2. Set Up Your Local Database
+
+# Example using psql
+
+createdb claimpilot_local
+
+Update your src/main/resources/application.properties (or use application-local.properties) with your local DB credentials:
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/claimpilot_local
+spring.datasource.username=your_username
+spring.datasource.password=your_password
+spring.jpa.hibernate.ddl-auto=update
+spring.profiles.active=local 3. Build and Run
+
+3. Build and Run
+
 ./mvnw clean package -DskipTests
+java -jar target/claimpilot-0.0.1-SNAPSHOT.jar
 
-upload to EC2 instance:
-scp -i ~/.ssh/ec2-key-claimpilot.pem target/claimpilot-0.0.1-SNAPSHOT.jar ec2-user@35.93.224.186:~/
+## ☁️ Cloud Deployment
 
-SSH into EC2 instance:
-ssh -i ~/.ssh/ec2-key-claimpilot.pem ec2-user@35.93.224.186
+- Frontend (Vercel):
 
-Stop the currently running app:
-pkill -f 'claimpilot'
+https://claim-pilot-frontend.vercel.app
 
-Run the Spring Boot JAR in ec2 console:
-java -jar claimpilot-0.0.1-SNAPSHOT.jar
-run without shutting down after terminal closes:
-nohup java -jar claimpilot-0.0.1-SNAPSHOT.jar --spring.profiles.active=aws > log.txt 2>&1 &
+- Backend (EC2 + RDS):
 
-Connect to RDS database from EC2:
+  REST API deployed on AWS EC2, connected to AWS RDS PostgreSQL
+  (Access via domain and secured API gateway)
 
-psql -h database-claimpilot.c524qeq804s9.us-west-2.rds.amazonaws.com \
- -U claimpilotDB \
- -d postgres
+  EC2_PUBLIC_IP: 35.93.224.186
+  endpoint test curl:
+  curl http://35.93.224.186:8080/api/claims
