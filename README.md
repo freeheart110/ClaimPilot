@@ -1,6 +1,6 @@
 # ClaimPilot 🛠️
 
-**ClaimPilot** is a microservice-based backend system for managing auto insurance claims, built with Java and Spring Boot. Designed to showcase real-world service-oriented architecture and backend optimization.
+**ClaimPilot** is a microservice-based backend system for managing auto insurance claims, built with Java and Spring Boot. Designed to showcase real-world service-oriented architecture and backend optimization. Live demo: https://claim-pilot-frontend.vercel.app
 
 ---
 
@@ -49,8 +49,6 @@ cd ClaimPilot
 
 2. Set Up Your Local Database
 
-# Example using psql
-
 createdb claimpilot_local
 
 Update your src/main/resources/application.properties (or use application-local.properties) with your local DB credentials:
@@ -59,7 +57,7 @@ spring.datasource.url=jdbc:postgresql://localhost:5432/claimpilot_local
 spring.datasource.username=your_username
 spring.datasource.password=your_password
 spring.jpa.hibernate.ddl-auto=update
-spring.profiles.active=local 3. Build and Run
+spring.profiles.active=local
 
 3. Build and Run
 
@@ -72,11 +70,4 @@ java -jar target/claimpilot-0.0.1-SNAPSHOT.jar
 
 https://claim-pilot-frontend.vercel.app
 
-- Backend (EC2 + RDS):
-
-  REST API deployed on AWS EC2, connected to AWS RDS PostgreSQL
-  (Access via domain and secured API gateway)
-
-  EC2_PUBLIC_IP: 35.93.224.186
-  endpoint test curl:
-  curl http://35.93.224.186:8080/api/claims
+- Backend (EC2 + RDS)
